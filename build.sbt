@@ -1,6 +1,6 @@
-val catsEffectVersion = "3.3.14"
-val fs2Version = "3.3.0"
-val circeVersion = "0.14.3"
+val catsEffectVersion = "3.4.8"
+val fs2Version = "3.7.0"
+val circeVersion = "0.14.5"
 
 ThisBuild / organization := "com.example"
 ThisBuild / scalaVersion := "2.13.5"
@@ -22,6 +22,6 @@ lazy val root = (project in file(".")).settings(
     "io.circe" %% "circe-parser" % circeVersion,
     // better monadic for compiler plugin as suggested by documentation
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
-    "org.scalatest" %% "scalatest" % "3.2.14" % "test"
+    "org.scalatest" %% "scalatest" % "3.2.15" % "test"
   )
 )
