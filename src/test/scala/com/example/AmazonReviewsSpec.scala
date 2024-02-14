@@ -1,11 +1,21 @@
 package com.example
 
-import com.example.AmazonReviews.summariseReviews
+import com.example.AmazonReviews._
 import org.scalatest.EitherValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
 class AmazonReviewsSpec extends AnyFreeSpec with Matchers with EitherValues {
+
+  val reviews: List[ReviewSummary] = List(
+    ReviewSummary("B1", 2, 1661939080),
+    ReviewSummary("B1", 4, 1662284683),
+    ReviewSummary("B2", 4, 1661939082),
+    ReviewSummary("B2", 1, 1661939082),
+    ReviewSummary("B3", 3, 1662284682),
+    ReviewSummary("B3", 7.57777777777, 1662284682),
+  )
+  val today = System.currentTimeMillis / 1000
 
   "transforms reviews into review summaries" in {
     val review = Review(
@@ -18,31 +28,82 @@ class AmazonReviewsSpec extends AnyFreeSpec with Matchers with EitherValues {
       "Ut deserunt adipisci aut.",
       1475261866L
     )
-    val input = List(review, review.copy(overall = 3.0), review.copy(overall = 1.0))
+    val input =
+      List(review, review.copy(overall = 3.0), review.copy(overall = 1.0))
     val result = summariseReviews(input)
 
     result.value.size shouldEqual 3
   }
-
-  "returns reviews within the given time range requested" ignore {
-//    val contents: List[String] =
-//      Source.fromResource("summarisedData.txt").getLines.toList
-//    val reviews: List[ReviewSummary] = parseTest(contents)
-//    val startDate = "1661939081" //Wed Aug 31 2022 09:44:41 GMT+0000
-//    val endDate = "1662284681" //Sun Sep 04 2022 09:44:41 GMT+0000
-//    val request = Request(startDate, endDate, limit = 5, minNumberReviews = 1)
-//    val result = searchReviews(request, reviews)
-//    result.size shouldEqual 9
+  "returns reviews within the given time range requested" in {
+    val startDate = 1661939081 //Wed Aug 31 2022 09:44:41 GMT+0000
+    val endDate = 1662284681 //Sun Sep 04 2022 09:44:41 GMT+0000
+    val result = reviews.filter(r => isWithinTimeRange(startDate, endDate, r))
+    result.size shouldEqual 2
   }
-  "returns all reviews when the time range requested is from the epoch to today" ignore {}
-  "returns no reviews when the time range requested is today" ignore {}
-  "returns no reviews when the time requested is in the future" ignore {}
+  "returns all reviews when the time range requested is from the epoch to today" in {
+    val startDate = 0
+    val result = reviews.filter(r => isWithinTimeRange(startDate, today, r))
+    result.size shouldEqual reviews.size
+  }
+  "returns no reviews when the time range requested is today" in {
+    val result = reviews.filter(r => isWithinTimeRange(today, today, r))
+    result shouldBe empty
+  }
+  "returns reviews on a given day when the start date and end date are the same" in {
+    val sameDate = reviews.head.unixReviewTime
+    val result = reviews.filter(r => isWithinTimeRange(sameDate, sameDate, r))
+    result.size shouldEqual 1
+  }
 
-  "returns reviews with the correct number of minimum reviews" ignore {}
+  "returns all reviews when the limit requested is zero" in {
+    val minReviews = 0
+    val result = productsWithMinReviews(minReviews, reviews)
+    result.size shouldBe reviews.size
+  }
+  "returns no reviews when the limit requested is very high" in {
+    val minReviews = 1000
+    val result = productsWithMinReviews(minReviews, reviews)
+    result shouldBe empty
+  }
+  "returns reviews when there are products that have more than the minimum number of reviews" in {
+    val minReviews = 2
+    val result = productsWithMinReviews(minReviews, reviews)
+    result shouldNot be(empty) //should I make this more specific?
+  }
 
-  "returns no reviews when the limit requested is zero" ignore {}
+  "when computing the average rating, returns a list of unique products" in {
+    val result = computeReviewAverage(reviews)
+    result.size shouldEqual reviews.map(_.asin).distinct.size
+  }
+  "when computing the average rating, does not change a list where every product asin is unique" in {
+    val reviews = List(
+      ReviewSummary("B1", 2, 1661939080),
+      ReviewSummary("B2", 4, 1662284683),
+      ReviewSummary("B3", 4, 1661939082))
+    val result = computeReviewAverage(reviews)
+    result.size shouldEqual reviews.size
+  }
+  "computes average rating for each product" in {
+    val result = computeReviewAverage(reviews)
+    result.filter(_.asin == "B1").map(_.averageRating) shouldEqual List(3)
+  }
+  "computes a math floor average rating" ignore {}
+  "handles decimal places as expected when computing the average rating" ignore {}
 
-  "orders the results with the highest average rated review first" ignore {}
-
+  "sorts the results with the highest average rated review first" in {
+    val request = Request(start = 0, end = today, limit = 10, minNumberReviews = 0)
+    val result = searchReviews(request, reviews)
+    result.value.headOption.map(_.asin) shouldBe Some("B3")
+  }
+  "returns an empty list when the requested limit is zero" in {
+    val request = Request(start = 0, end = today, limit = 0, minNumberReviews = 0)
+    val result = searchReviews(request, reviews)
+    result.value shouldBe empty
+  }
+  "returns all elements in the list when the request size matches the list length" in {
+    val request = Request(start = 0, end = today, limit = reviews.size, minNumberReviews = 0)
+    val result = searchReviews(request, reviews)
+    result.value.size shouldBe reviews.map(_.asin).distinct.size
+  }
   "handles incorrect requests gracefully" ignore {}
 }

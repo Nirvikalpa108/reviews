@@ -3,8 +3,8 @@ package com.example
 import io.circe._, io.circe.generic.semiauto._
 
 case class Request(
-    start: String,
-    end: String,
+    start: Long,
+    end: Long,
     limit: Int,
     minNumberReviews: Int
 )
