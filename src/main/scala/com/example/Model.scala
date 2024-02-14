@@ -1,13 +1,26 @@
 package com.example
 
-import io.circe._, io.circe.generic.semiauto._
+import cats.effect.IO
+import io.circe._
+import io.circe.generic.semiauto._
+import org.http4s.{EntityDecoder, EntityEncoder}
+import org.http4s.circe._
+import io.circe.generic.auto._
 
+//FYI the start and end values are strings in date.month.year format, so they need converting into Unix timestamps
 case class Request(
     start: Long,
     end: Long,
     limit: Int,
     minNumberReviews: Int
 )
+
+object Request {
+  implicit val requestEntityDecoder: EntityDecoder[IO, Request] =
+    jsonOf[IO, Request]
+  implicit val requestEntityEncoder: EntityEncoder[IO, Request] =
+    jsonEncoderOf[IO, Request]
+}
 
 case class Review(
     asin: String,
@@ -37,4 +50,16 @@ object ReviewSummary {
 
 case class Result(asin: String, averageRating: Double)
 
+object Result {
+  implicit val resultEncoder: Encoder[Result] = deriveEncoder[Result]
+  implicit val resultEntityEncoder: EntityEncoder[IO, List[Result]] =
+    jsonEncoderOf[IO, List[Result]]
+
+}
+
 case class Error(message: String)
+
+object Error {
+  implicit val errorEntityEncoder: EntityEncoder[IO, Error] =
+    jsonEncoderOf[IO, Error]
+}

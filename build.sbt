@@ -1,6 +1,7 @@
 val catsEffectVersion = "3.4.8"
 val fs2Version = "3.7.0"
 val circeVersion = "0.14.5"
+val http4sVersion = "0.23.25"
 
 ThisBuild / organization := "com.example"
 ThisBuild / scalaVersion := "2.13.5"
@@ -22,6 +23,10 @@ lazy val root = (project in file(".")).settings(
     "io.circe" %% "circe-parser" % circeVersion,
     // better monadic for compiler plugin as suggested by documentation
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
+    "org.http4s" %% "http4s-ember-client" % http4sVersion,
+    "org.http4s" %% "http4s-ember-server" % http4sVersion,
+    "org.http4s" %% "http4s-dsl" % http4sVersion,
+    "org.http4s" %% "http4s-circe" % http4sVersion,
     "org.scalatest" %% "scalatest" % "3.2.15" % Test,
     "org.typelevel" %% "cats-effect-testing-scalatest" % "1.5.0" % Test
   )
