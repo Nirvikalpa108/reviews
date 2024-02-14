@@ -1,11 +1,16 @@
 package com.example
 
-import com.example.AmazonReviews._
+import cats.effect.testing.scalatest.AsyncIOSpec
+import com.example.InMemoryReviewService._
 import org.scalatest.EitherValues
-import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 
-class AmazonReviewsSpec extends AnyFreeSpec with Matchers with EitherValues {
+class ReviewServiceSpec
+    extends AsyncFreeSpec
+    with Matchers
+    with EitherValues
+    with AsyncIOSpec {
 
   val reviews: List[ReviewSummary] = List(
     ReviewSummary("B1", 2, 1661939080),
@@ -13,27 +18,10 @@ class AmazonReviewsSpec extends AnyFreeSpec with Matchers with EitherValues {
     ReviewSummary("B2", 4, 1661939082),
     ReviewSummary("B2", 1, 1661939082),
     ReviewSummary("B3", 3, 1662284682),
-    ReviewSummary("B3", 7.57777777777, 1662284682),
+    ReviewSummary("B3", 7.57777777777, 1662284682)
   )
   val today = System.currentTimeMillis / 1000
 
-  "transforms reviews into review summaries" in {
-    val review = Review(
-      "B000Q75VCO",
-      List(16, 40),
-      2.0,
-      "Words are in my not-so-humble opinion, the most inexhaustible form of magic we have, capable both of inflicting injury and remedying it.",
-      "B07844AAA04E4",
-      Some("Gaylord Bashirian"),
-      "Ut deserunt adipisci aut.",
-      1475261866L
-    )
-    val input =
-      List(review, review.copy(overall = 3.0), review.copy(overall = 1.0))
-    val result = summariseReviews(input)
-
-    result.value.size shouldEqual 3
-  }
   "returns reviews within the given time range requested" in {
     val startDate = 1661939081 //Wed Aug 31 2022 09:44:41 GMT+0000
     val endDate = 1662284681 //Sun Sep 04 2022 09:44:41 GMT+0000
@@ -79,7 +67,8 @@ class AmazonReviewsSpec extends AnyFreeSpec with Matchers with EitherValues {
     val reviews = List(
       ReviewSummary("B1", 2, 1661939080),
       ReviewSummary("B2", 4, 1662284683),
-      ReviewSummary("B3", 4, 1661939082))
+      ReviewSummary("B3", 4, 1661939082)
+    )
     val result = computeReviewAverage(reviews)
     result.size shouldEqual reviews.size
   }
@@ -87,23 +76,33 @@ class AmazonReviewsSpec extends AnyFreeSpec with Matchers with EitherValues {
     val result = computeReviewAverage(reviews)
     result.filter(_.asin == "B1").map(_.averageRating) shouldEqual List(3)
   }
-  "computes a math floor average rating" ignore {}
-  "handles decimal places as expected when computing the average rating" ignore {}
+  "computes a math floor average rating" ignore { ??? }
+  "handles decimal places as expected when computing the average rating" ignore {
+    ???
+  }
 
   "sorts the results with the highest average rated review first" in {
-    val request = Request(start = 0, end = today, limit = 10, minNumberReviews = 0)
-    val result = searchReviews(request, reviews)
-    result.value.headOption.map(_.asin) shouldBe Some("B3")
+    val request =
+      Request(start = 0, end = today, limit = 10, minNumberReviews = 0)
+    val result = InMemoryReviewService.impl().getReviews(request, reviews)
+
+    result.asserting(_.value.headOption.map(_.asin) shouldBe Some("B3"))
   }
   "returns an empty list when the requested limit is zero" in {
-    val request = Request(start = 0, end = today, limit = 0, minNumberReviews = 0)
-    val result = searchReviews(request, reviews)
-    result.value shouldBe empty
+    val request =
+      Request(start = 0, end = today, limit = 0, minNumberReviews = 0)
+    val result = InMemoryReviewService.impl().getReviews(request, reviews)
+    result.asserting(_.value shouldBe empty)
   }
   "returns all elements in the list when the request size matches the list length" in {
-    val request = Request(start = 0, end = today, limit = reviews.size, minNumberReviews = 0)
-    val result = searchReviews(request, reviews)
-    result.value.size shouldBe reviews.map(_.asin).distinct.size
+    val request = Request(
+      start = 0,
+      end = today,
+      limit = reviews.size,
+      minNumberReviews = 0
+    )
+    val result = InMemoryReviewService.impl().getReviews(request, reviews)
+    result.asserting(_.value.size shouldBe reviews.map(_.asin).distinct.size)
   }
-  "handles incorrect requests gracefully" ignore {}
+  "handles incorrect requests gracefully" ignore { ??? }
 }

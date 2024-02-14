@@ -2,38 +2,33 @@ package com.example
 
 import cats.effect.IO
 
-object AmazonReviews {
-
-  def test(): IO[String] = IO.delay("Hello World!")
-
-  // we don't need all of the input data, just some of it to respond to client requests, so here we perform that transformation
-  def summariseReviews(
-      reviews: List[Review]
-  ): Either[Error, List[ReviewSummary]] = {
-    Right(reviews.map { r =>
-      ReviewSummary(r.asin, r.overall, r.unixReviewTime)
-    })
-  }
-
-  def searchReviews(
+sealed trait ReviewService[F[_]] {
+  def getReviews(
       request: Request,
       reviews: List[ReviewSummary]
-  ): Either[Error, List[Result]] = {
-    val withinTimeRange = reviews.filter(review =>
-      isWithinTimeRange(request.start, request.end, review)
-    )
-    val withMinReviews =
-      productsWithMinReviews(request.minNumberReviews, withinTimeRange)
-    //TODO is there a Left scenario now? Could there be one in the future?
-    Right(
-      computeReviewAverage(withMinReviews)
+  ): F[Either[Error, List[Result]]]
+}
+
+object InMemoryReviewService {
+  def impl(): ReviewService[IO] = new ReviewService[IO] {
+    override def getReviews(
+        request: Request,
+        reviews: List[ReviewSummary]
+    ): IO[Either[Error, List[Result]]] = {
+      val withinTimeRange = reviews.filter(review =>
+        isWithinTimeRange(request.start, request.end, review)
+      )
+      val withMinReviews =
+        productsWithMinReviews(request.minNumberReviews, withinTimeRange)
+
+      val result = computeReviewAverage(withMinReviews)
         // the minus sign reverses the sort, so that the highest average rating is first
         .sortBy(-_.averageRating)
         .take(request.limit)
-    )
+      IO(Right(result))
+    }
   }
 
-  //TODO make these private and change tests to access them
   def isWithinTimeRange(
       start: Long,
       end: Long,
@@ -64,5 +59,4 @@ object AmazonReviews {
       Result(product, averageRating)
     }.toList
   }
-
 }

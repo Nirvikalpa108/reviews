@@ -4,5 +4,5 @@ import cats.effect.IOApp
 import cats.effect.IO
 
 object Main extends IOApp.Simple {
-  def run: IO[Unit] = AmazonReviews.test().flatMap(IO.println)
+  def run: IO[Unit] = ???
 }

@@ -22,6 +22,7 @@ lazy val root = (project in file(".")).settings(
     "io.circe" %% "circe-parser" % circeVersion,
     // better monadic for compiler plugin as suggested by documentation
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
-    "org.scalatest" %% "scalatest" % "3.2.15" % "test"
+    "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+    "org.typelevel" %% "cats-effect-testing-scalatest" % "1.5.0" % Test
   )
 )

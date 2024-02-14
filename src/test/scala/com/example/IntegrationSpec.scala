@@ -1,19 +1,23 @@
 package com.example
 
-import com.example.AmazonReviews.summariseReviews
-import com.example.FileUtils.parseFile
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import cats.data.EitherT
+
 
 class IntegrationSpec extends AnyFreeSpec with Matchers {
   "reads file and transforms into Review Summaries" in {
+    val fileService = InMemoryFileService.impl()
+    val reviewService = InMemoryReviewService.impl()
     val testFile = "src/test/resources/fullData.txt"
+    val now = System.currentTimeMillis / 1000
+    val request: Request = Request(start = 0, end = now, limit = 5, minNumberReviews = 0)
     for {
-      reviews <- parseFile(testFile)
-      reviewSummaries <- summariseReviews(reviews)
+      reviews <- EitherT(fileService.parse(testFile))
+      reviewSummaries <- EitherT(fileService.transform(reviews))
+      result <- EitherT(reviewService.getReviews(request, reviewSummaries))
     } yield {
-      reviewSummaries.size shouldBe reviews.size
-      //any more effective assertions?
+      result.size shouldBe 15
     }
   }
 }
