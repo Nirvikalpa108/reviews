@@ -6,7 +6,14 @@ import io.circe.parser.decode
 import scala.io.Source
 import scala.util.{Failure, Success, Using}
 
-trait FileService[F[_]] {
+/*
+A FileService is responsible for parsing a given file and turning it into Reviews.
+It can also transform those Reviews into ReviewSummaries.
+There is currently an in-memory implementation of this, but later I will build a streaming impl using fs2.
+ */
+  trait FileService[F[_]] {
+  //TODO implement onStart to perform partitioning
+  //def onStart(): F[Unit]
   def parse(filePath: String): F[Either[Error, List[Review]]]
   def transform(reviews: List[Review]): F[Either[Error, List[ReviewSummary]]]
 }
@@ -20,7 +27,15 @@ object InMemoryFileService {
       })
     }
 
-    def createReviews(input: String): Either[Error, List[Review]] =
+    //TODO not sure about the type signature - is there ever a Left situation?
+    override def transform(
+        reviews: List[Review]
+    ): IO[Either[Error, List[ReviewSummary]]] =
+      IO(Right(reviews.map { r =>
+        ReviewSummary(r.asin, r.overall, r.unixReviewTime)
+      }))
+
+    private def createReviews(input: String): Either[Error, List[Review]] =
       decode[List[Review]](jsonNewLineDelimitedToString(input)) match {
         case Left(err)      => Left(Error(err.getMessage))
         case Right(reviews) => Right(reviews)
@@ -32,12 +47,5 @@ object InMemoryFileService {
         input.linesIterator.filter(_.trim.nonEmpty).toList
       rows.mkString("[", ",", "]")
     }
-
-    //not sure about the type signature - is there ever a Left situation?
-    override def transform(
-        reviews: List[Review]
-    ): IO[Either[Error, List[ReviewSummary]]] = IO(Right(reviews.map { r =>
-      ReviewSummary(r.asin, r.overall, r.unixReviewTime)
-    }))
   }
 }

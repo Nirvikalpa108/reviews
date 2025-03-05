@@ -7,6 +7,7 @@ import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.middleware.Logger
 
+//TODO where is my middleware? Add this.
 object Server {
   def run[F[_]: Async: Network](filePath: String): IO[Nothing] = {
     val fileService = InMemoryFileService.impl()

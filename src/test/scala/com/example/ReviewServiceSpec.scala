@@ -88,6 +88,7 @@ class ReviewServiceSpec
 
     result.asserting(_.value.headOption.map(_.asin) shouldBe Some("B3"))
   }
+  //TODO are there any further sorting tests I would like?
   "returns an empty list when the requested limit is zero" in {
     val request =
       Request(start = 0, end = today, limit = 0, minNumberReviews = 0)
@@ -104,5 +105,6 @@ class ReviewServiceSpec
     val result = InMemoryReviewService.impl().getReviews(request, reviews)
     result.asserting(_.value.size shouldBe reviews.map(_.asin).distinct.size)
   }
+  //TODO check other size things - what happens when the size is greater than the list length? what if it is less?
   "handles incorrect requests gracefully" ignore { ??? }
 }
