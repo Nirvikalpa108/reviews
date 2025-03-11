@@ -48,7 +48,7 @@ class ReviewServiceSpec
     val result = productsWithMinReviews(minReviews, reviews)
     result.size shouldBe reviews.size
   }
-  "returns no reviews when the limit requested is very high" in {
+  "returns no reviews when the limit requested is higher than any available" in {
     val minReviews = 1000
     val result = productsWithMinReviews(minReviews, reviews)
     result shouldBe empty
@@ -76,10 +76,8 @@ class ReviewServiceSpec
     val result = computeReviewAverage(reviews)
     result.filter(_.asin == "B1").map(_.averageRating) shouldEqual List(3)
   }
-  "computes a math floor average rating" ignore { ??? }
-  "handles decimal places as expected when computing the average rating" ignore {
-    ???
-  }
+  //TODO I need to work out exactly what the decimal places should be - go back to README
+  "handles decimal places as expected when computing the average rating" ignore {???}
 
   "sorts the results with the highest average rated review first" in {
     val request =
@@ -88,7 +86,6 @@ class ReviewServiceSpec
 
     result.asserting(_.value.headOption.map(_.asin) shouldBe Some("B3"))
   }
-  //TODO are there any further sorting tests I would like?
   "returns an empty list when the requested limit is zero" in {
     val request =
       Request(start = 0, end = today, limit = 0, minNumberReviews = 0)
@@ -105,6 +102,6 @@ class ReviewServiceSpec
     val result = InMemoryReviewService.impl().getReviews(request, reviews)
     result.asserting(_.value.size shouldBe reviews.map(_.asin).distinct.size)
   }
-  //TODO check other size things - what happens when the size is greater than the list length? what if it is less?
-  "handles incorrect requests gracefully" ignore { ??? }
+  "returns all available reviews when requested size exceeds list length" ignore {???}
+  "returns only the requested number of reviews when limit is less than list length" ignore {???}
 }

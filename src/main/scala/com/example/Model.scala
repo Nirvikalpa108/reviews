@@ -48,7 +48,7 @@ object ReviewSummary {
     deriveDecoder[ReviewSummary]
 }
 
-case class Result(asin: String, averageRating: Double)
+case class Result(asin: String, averageRating: BigDecimal)
 
 object Result {
   implicit val resultEncoder: Encoder[Result] = deriveEncoder[Result]

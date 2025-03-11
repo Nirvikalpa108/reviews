@@ -14,7 +14,7 @@ class IntegrationSpec extends AnyFreeSpec with Matchers {
     val request: Request = Request(start = 0, end = now, limit = 5, minNumberReviews = 0)
     for {
       reviews <- EitherT(fileService.parse(testFile))
-      reviewSummaries <- EitherT(fileService.transform(reviews))
+      reviewSummaries = fileService.transform(reviews)
       result <- EitherT(reviewService.getReviews(request, reviewSummaries))
     } yield {
       result.size shouldBe 15

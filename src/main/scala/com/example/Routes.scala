@@ -29,7 +29,7 @@ object Routes {
           req <- EitherT.right(req.as[Request]) //turn request into Request Type
           //TODO right now we're parsing the file each time this request is run. In the next iteration we should be reading our partitioned files.
           reviews <- EitherT(F.parse(file))
-          reviewSummaries <- EitherT(F.transform(reviews)) //transform Reviews into ReviewSummaries
+          reviewSummaries = F.transform(reviews) //transform Reviews into ReviewSummaries
           result <- EitherT(R.getReviews(req, reviewSummaries)) //get Result
         } yield result
         maybeResult.value.flatMap {

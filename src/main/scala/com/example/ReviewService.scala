@@ -2,11 +2,7 @@ package com.example
 
 import cats.effect.IO
 
-/*
-The ReviewService is responsible for taking a user's request and a list of ReviewSummaries and returning a result to the user.
- */
-//TODO why does it also take a list of the review summaries? What will give it these? Should they be cached somewhere?
-//TODO Do we need a cache service that retrieves the correct review summaries based on the date?
+/* The ReviewService is responsible for taking a user's request and a list of ReviewSummaries and returning a result to the user.*/
 sealed trait ReviewService[F[_]] {
   def getReviews(
       request: Request,
@@ -48,7 +44,12 @@ object InMemoryReviewService {
       minReviews: Int,
       allReviews: List[ReviewSummary]
   ): List[ReviewSummary] = {
-    val productsToKeep = allReviews
+    //TODO a shorter alternative, but harder to read?
+    /*
+    val productAsinsToKeep: Map[String, Int] = allReviews.groupMapReduce(_.asin)(_ => 1)(_ + _) // Groups by asin and counts occurrences
+    allReviews.filter(r => productAsinsToKeep.getOrElse("", 0) >= minReviews)
+     */
+    val productAsinsToKeep: List[String] = allReviews
       //groups by the unique asins, which are the unique product identifiers
       .groupBy(r => r.asin)
       // gets the number of reviews for each product
@@ -58,10 +59,7 @@ object InMemoryReviewService {
       // returns the product identifiers themselves
       .keys
       .toList
-    //TODO maybe this filter should live in the method that calls this one?
-    //I'm just wondering if that would make it cleaner
-    //would that support testing?
-    allReviews.filter(r => productsToKeep.contains(r.asin))
+    allReviews.filter(r => productAsinsToKeep.contains(r.asin))
   }
 
   def computeReviewAverage(allReviews: List[ReviewSummary]): List[Result] = {
@@ -69,7 +67,7 @@ object InMemoryReviewService {
     val productToReviews: Map[String, List[ReviewSummary]] = allReviews.groupBy(_.asin)
     //get the average rating and turn therefore turn the ReviewSummaries into the Result Type
     productToReviews.map { case (product, reviewSummaries) =>
-      val averageRating: Double =
+      val averageRating: BigDecimal =
         reviewSummaries.map(_.overall).sum / reviewSummaries.size
       Result(product, averageRating)
     }.toList

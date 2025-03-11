@@ -7,15 +7,14 @@ import scala.io.Source
 import scala.util.{Failure, Success, Using}
 
 /*
-A FileService is responsible for parsing a given file and turning it into Reviews.
-It can also transform those Reviews into ReviewSummaries.
+A FileService is responsible for parsing a given file and turning it into ReviewSummaries.
 There is currently an in-memory implementation of this, but later I will build a streaming impl using fs2.
  */
-  trait FileService[F[_]] {
+trait FileService[F[_]] {
   //TODO implement onStart to perform partitioning
   //def onStart(): F[Unit]
   def parse(filePath: String): F[Either[Error, List[Review]]]
-  def transform(reviews: List[Review]): F[Either[Error, List[ReviewSummary]]]
+  def transform(reviews: List[Review]): List[ReviewSummary]
 }
 
 object InMemoryFileService {
@@ -30,10 +29,8 @@ object InMemoryFileService {
     //TODO not sure about the type signature - is there ever a Left situation?
     override def transform(
         reviews: List[Review]
-    ): IO[Either[Error, List[ReviewSummary]]] =
-      IO(Right(reviews.map { r =>
-        ReviewSummary(r.asin, r.overall, r.unixReviewTime)
-      }))
+    ): List[ReviewSummary] =
+      reviews.map(r => ReviewSummary(r.asin, r.overall, r.unixReviewTime))
 
     private def createReviews(input: String): Either[Error, List[Review]] =
       decode[List[Review]](jsonNewLineDelimitedToString(input)) match {
@@ -41,7 +38,9 @@ object InMemoryFileService {
         case Right(reviews) => Right(reviews)
       }
 
-    //don't fully understand this impl, just copy paste job from https://stackoverflow.com/questions/75870869/parse-n-separated-json-with-circe
+    /* takes a newline-delimited JSON string and converts it into a valid JSON array string.
+    https://stackoverflow.com/questions/75870869/parse-n-separated-json-with-circe
+     */
     private def jsonNewLineDelimitedToString(input: String): String = {
       val rows: List[String] =
         input.linesIterator.filter(_.trim.nonEmpty).toList

@@ -13,4 +13,9 @@ class FileServiceSpec extends AsyncFreeSpec with Matchers with EitherValues with
     result.asserting(_.value.size shouldBe 15)
     result.asserting(_.value.head.asin shouldBe "B000Q75VCO")
   }
+  "returns an empty list when parsing an empty file"  ignore {???}
+  "fails gracefully when the file does not exist" ignore {???}
+  "fails gracefully when the file contains invalid data" ignore {???}
+  "handles files with mixed valid and invalid records correctly" ignore {???}
+  "returns an appropriate error when file permissions prevent reading" ignore {???}
 }
