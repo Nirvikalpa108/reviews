@@ -25,7 +25,7 @@ object Request {
 case class Review(
     asin: String,
     helpful: List[Int],
-    overall: Double,
+    overall: BigDecimal,
     reviewText: String,
     reviewerID: String,
     reviewerName: Option[String],
@@ -40,7 +40,7 @@ object Review {
 
 case class ReviewSummary(
     asin: String,
-    overall: Double, //this is NOT an average! I was getting confused before!!
+    overall: BigDecimal, //this is NOT an average! I was getting confused before!!
     unixReviewTime: Long //TODO when file partitioning is introduced this can be removed if the file names equal the dates
 )
 object ReviewSummary {

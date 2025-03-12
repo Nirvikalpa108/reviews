@@ -76,9 +76,15 @@ class ReviewServiceSpec
     val result = computeReviewAverage(reviews)
     result.filter(_.asin == "B1").map(_.averageRating) shouldEqual List(3)
   }
-  //TODO I need to work out exactly what the decimal places should be - go back to README
-  "handles decimal places as expected when computing the average rating" ignore {???}
-
+  "computes average rating correctly with appropriate decimal precision" in {
+    val reviews: List[ReviewSummary] = List(
+      ReviewSummary("B1", 7.0, 1661939080),
+      ReviewSummary("B1", 3.0, 1662284683),
+      ReviewSummary("B1", 4.0, 1661939082),
+    )
+    val result = computeReviewAverage(reviews)
+    result.map(_.averageRating).head shouldEqual BigDecimal("4.666666666666666666666666666666667")
+  }
   "sorts the results with the highest average rated review first" in {
     val request =
       Request(start = 0, end = today, limit = 10, minNumberReviews = 0)
@@ -86,6 +92,7 @@ class ReviewServiceSpec
 
     result.asserting(_.value.headOption.map(_.asin) shouldBe Some("B3"))
   }
+
   "returns an empty list when the requested limit is zero" in {
     val request =
       Request(start = 0, end = today, limit = 0, minNumberReviews = 0)
@@ -102,6 +109,25 @@ class ReviewServiceSpec
     val result = InMemoryReviewService.impl().getReviews(request, reviews)
     result.asserting(_.value.size shouldBe reviews.map(_.asin).distinct.size)
   }
-  "returns all available reviews when requested size exceeds list length" ignore {???}
-  "returns only the requested number of reviews when limit is less than list length" ignore {???}
+  "returns all available reviews when requested size exceeds list length" in {
+    val request = Request(
+      start = 0,
+      end = today,
+      limit = reviews.size + 1,
+      minNumberReviews = 0
+    )
+    val result = InMemoryReviewService.impl().getReviews(request, reviews)
+    result.asserting(_.value.size shouldBe reviews.map(_.asin).distinct.size)
+  }
+  "returns only the requested number of reviews when limit is less than list length" in {
+    val limitRequest = 1
+    val request = Request(
+      start = 0,
+      end = today,
+      limit = limitRequest,
+      minNumberReviews = 0
+    )
+    val result = InMemoryReviewService.impl().getReviews(request, reviews)
+    result.asserting(_.value.size shouldEqual limitRequest)
+  }
 }
