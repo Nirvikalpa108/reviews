@@ -24,6 +24,24 @@ class RoutesSpec extends AsyncFreeSpec with Matchers with AsyncIOSpec {
     check(respIO, Status.Ok, Some("Hello World!")) shouldBe true
   }
 
+  "POST /amazon/best-rated should return 200 OK" in {
+    val jsonBody: String =
+      """
+          {
+            "start": "0",
+            "end": "1708018606",
+            "limit": "5",
+            "minNumberReviews": "0"
+          }
+        """
+    val request = Request[IO](method = Method.POST, uri = uri"/amazon/best-rated").withEntity(jsonBody)
+    val fileService = InMemoryFileService.impl()
+    val reviewService = InMemoryReviewService.impl()
+    val filePath = ""
+    val expectedBodyResult: Option[List[Result]] = ???
+    val respIO: IO[Response[IO]] = Routes.reviewServiceRoutes[IO](fileService, reviewService, filePath).orNotFound.run(request)
+    check(respIO, Status.Ok, expectedBody = expectedBodyResult) shouldBe true
+  }
   // Return true if match succeeds; otherwise false
   def check[A](actual: IO[Response[IO]],
                expectedStatus: Status,
