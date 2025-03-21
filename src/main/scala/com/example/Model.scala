@@ -54,7 +54,8 @@ object Result {
   implicit val resultEncoder: Encoder[Result] = deriveEncoder[Result]
   implicit val resultEntityEncoder: EntityEncoder[IO, List[Result]] =
     jsonEncoderOf[IO, List[Result]]
-
+  implicit val resultEntityDecoder: EntityDecoder[IO, List[Result]] =
+    jsonOf[IO, List[Result]]
 }
 
 case class Error(message: String)
