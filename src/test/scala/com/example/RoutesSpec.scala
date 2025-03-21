@@ -14,6 +14,15 @@ import org.http4s.implicits._
 
 //https://http4s.org/v1/docs/testing.html
 class RoutesSpec extends AsyncFreeSpec with Matchers with AsyncIOSpec {
+  //TODO remove this route and test eventually
+  "GET /test should return 200 OK with Hello World!" in {
+    val request = Request[IO](method = Method.GET, uri = uri"/test")
+    val fileService = InMemoryFileService.impl()
+    val reviewService = InMemoryReviewService.impl()
+    val filePath = ""
+    val respIO: IO[Response[IO]] = Routes.reviewServiceRoutes[IO](fileService, reviewService, filePath).orNotFound.run(request)
+    check(respIO, Status.Ok, Some("Hello World!")) shouldBe true
+  }
 
   // Return true if match succeeds; otherwise false
   def check[A](actual: IO[Response[IO]],
